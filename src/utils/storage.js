@@ -6,7 +6,6 @@ const STORAGE_KEYS = {
   VAULT_SALT: 'vault_salt_v1',
   VAULT_HASH: 'vault_auth_hash_v1',
   VAULT_USER_EMAIL: 'vault_user_email_v1',
-  VAULT_RECOVERY_KEY: 'vault_recovery_key_v1',
   VAULT_ITEMS: 'vault_encrypted_items_v1',
   VAULT_TRASH: 'vault_encrypted_trash_v1',
   VAULT_SETTINGS: 'vault_settings_v1'
@@ -34,14 +33,6 @@ export function getVaultUserEmail() {
 
 export function saveVaultUserEmail(email) {
   localStorage.setItem(STORAGE_KEYS.VAULT_USER_EMAIL, email);
-}
-
-export function getVaultRecoveryKey() {
-  return localStorage.getItem(STORAGE_KEYS.VAULT_RECOVERY_KEY);
-}
-
-export function saveVaultRecoveryKey(recoveryKey) {
-  localStorage.setItem(STORAGE_KEYS.VAULT_RECOVERY_KEY, recoveryKey);
 }
 
 export function getEncryptedItems() {
@@ -75,7 +66,6 @@ export function clearVaultData() {
   localStorage.removeItem(STORAGE_KEYS.VAULT_SALT);
   localStorage.removeItem(STORAGE_KEYS.VAULT_HASH);
   localStorage.removeItem(STORAGE_KEYS.VAULT_USER_EMAIL);
-  localStorage.removeItem(STORAGE_KEYS.VAULT_RECOVERY_KEY);
   localStorage.removeItem(STORAGE_KEYS.VAULT_ITEMS);
   localStorage.removeItem(STORAGE_KEYS.VAULT_TRASH);
 }
