@@ -117,7 +117,7 @@ export function AuthProvider({ children }) {
 
     const resetLink = `${window.location.origin}/reset-password`;
 
-    const response = await fetch('/api/send-reset-email.js', {
+    const response = await fetch('/api/send-reset-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
