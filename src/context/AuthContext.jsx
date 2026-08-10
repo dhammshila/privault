@@ -106,19 +106,38 @@ export function AuthProvider({ children }) {
   // Send Reset Password Email Notification
   const sendPasswordResetEmail = async (email) => {
     const savedEmail = getVaultUserEmail();
-    if (savedEmail && savedEmail.toLowerCase() !== email.toLowerCase()) {
+
+    if (!savedEmail) {
+      throw new Error('No registered email found.');
+    }
+
+    if (savedEmail.toLowerCase() !== email.toLowerCase()) {
       throw new Error('Email address not registered in this Vault session.');
     }
 
-    // Simulate dispatching reset link to user's email
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          success: true,
-          message: `Password reset link dispatched to ${email}. You can reset your password or use your Recovery Key.`
-        });
-      }, 1000);
+    const resetLink = `${window.location.origin}/reset-password`;
+
+    const response = await fetch('/api/send-reset-email.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        resetLink,
+      }),
     });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to send reset email.');
+    }
+
+    return {
+      success: true,
+      message: `Password reset email sent to ${email}.`,
+    };
   };
 
   // Reset Master Password using Recovery Key or Reset Link
