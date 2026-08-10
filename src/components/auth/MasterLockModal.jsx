@@ -321,6 +321,76 @@ export default function MasterLockModal() {
               {loading ? 'Decrypting AES Key...' : 'Sign In & Unlock Vault'}
             </button>
 
+            {generatedRecoveryKey && (
+              <div style={{
+                background: 'rgba(0, 242, 254, 0.08)',
+                border: '1px solid rgba(0, 242, 254, 0.3)',
+                borderRadius: 'var(--radius-md)',
+                padding: '16px',
+                marginBottom: '16px'
+              }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '8px',
+                color: 'var(--accent-cyan)',
+                fontWeight: 600
+              }}>
+              <Key size={16} />
+              Your Recovery Key
+              </div>
+
+              <p style={{
+                fontSize: '0.75rem',
+                color: 'var(--text-muted)',
+                marginBottom: '10px'
+              }}>
+              Save this key somewhere safe. You will need it if you forget your master password.
+              </p>
+
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px'
+    }}>
+      <code style={{
+        flex: 1,
+        padding: '10px',
+        background: 'rgba(0,0,0,0.3)',
+        borderRadius: '6px',
+        color: '#fff',
+        fontSize: '0.85rem',
+        wordBreak: 'break-all'
+      }}>
+        {generatedRecoveryKey}
+      </code>
+
+      <button
+        type="button"
+        onClick={() => copyRecoveryKey(generatedRecoveryKey)}
+        className="btn-secondary"
+        style={{
+          padding: '10px',
+          minWidth: '42px',
+          justifyContent: 'center'
+        }}
+        title="Copy Recovery Key"
+      >
+        {copiedKey ? <Check size={16} /> : <Copy size={16} />}
+      </button>
+    </div>
+
+    <div style={{
+      marginTop: '10px',
+      fontSize: '0.72rem',
+      color: 'var(--accent-amber)'
+    }}>
+      ⚠️ This key cannot be recovered if you lose it.
+    </div>
+  </div>
+)}
+
             <div style={{ textAlign: 'center', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
               Don't have an account?{' '}
               <button
