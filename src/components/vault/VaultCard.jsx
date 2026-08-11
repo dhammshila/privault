@@ -45,9 +45,9 @@ export default function VaultCard({ item }) {
   const data = item.plainData || {};
 
   return (
-    <div className="glass-panel glass-card-interactive" style={{ padding: '20px', position: 'relative' }}>
+    <div className="glass-panel glass-card-interactive vault-card" style={{ padding: '20px', position: 'relative' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '14px' }}>
+      <div className="vault-card-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
             width: '32px',
@@ -70,7 +70,7 @@ export default function VaultCard({ item }) {
         </div>
 
         {/* Favorite & Action Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div className="vault-card-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <button
             onClick={() => toggleFavorite(item.id)}
             style={{
@@ -109,13 +109,13 @@ export default function VaultCard({ item }) {
             border: '1px solid var(--border-subtle)'
           }}>
             {data.username && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.82rem' }}>
+              <div className="vault-card-data-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.82rem' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Username:</span>
                 <span style={{ color: '#fff', fontFamily: 'var(--font-mono)' }}>{data.username}</span>
               </div>
             )}
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="vault-card-secret-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Key/Secret:</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{
@@ -143,7 +143,7 @@ export default function VaultCard({ item }) {
             </div>
 
             {data.serviceUrl && (
-              <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="vault-card-service-url" style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                 <a href={data.serviceUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                   <span>{data.serviceUrl}</span>
                   <ExternalLink size={12} />

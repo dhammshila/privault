@@ -42,7 +42,7 @@ export default function SecurityAudit() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Top Banner Score */}
-      <div className="glass-panel" style={{
+      <div className="glass-panel security-banner" style={{
         padding: '28px',
         background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(10, 14, 22, 0.9) 100%)',
         border: '1px solid rgba(16, 185, 129, 0.3)',
@@ -50,7 +50,7 @@ export default function SecurityAudit() {
         alignItems: 'center',
         justifyContent: 'space-between'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div className="security-banner-content" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{
             width: '68px',
             height: '68px',
@@ -63,7 +63,7 @@ export default function SecurityAudit() {
           }}>
             <ShieldCheck size={36} color="#050a14" />
           </div>
-          <div>
+          <div className="security-banner-copy">
             <h2 style={{ fontSize: '1.4rem', color: '#fff', marginBottom: '4px' }}>
               Vault Security Health Rating: <span style={{ color: 'var(--accent-emerald)' }}>{score}% (EXCELLENT)</span>
             </h2>
@@ -79,7 +79,7 @@ export default function SecurityAudit() {
       </div>
 
       {/* Grid Status Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+      <div className="security-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
         {/* Encryption Spec Card */}
         <div className="glass-panel" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
@@ -115,7 +115,7 @@ export default function SecurityAudit() {
             <h3 style={{ fontSize: '1rem', color: '#fff' }}>Audit Diagnostics</h3>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.84rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="audit-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <CheckCircle2 size={16} color="var(--accent-emerald)" />
                 <span>Weak Password Audit</span>
@@ -125,7 +125,7 @@ export default function SecurityAudit() {
               </span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="audit-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <CheckCircle2 size={16} color="var(--accent-emerald)" />
                 <span>Duplicate Secret Keys</span>
@@ -135,7 +135,7 @@ export default function SecurityAudit() {
               </span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="audit-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <CheckCircle2 size={16} color="var(--accent-emerald)" />
                 <span>Client Memory Protection</span>

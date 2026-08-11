@@ -100,7 +100,7 @@ export default function VaultItemModal() {
   return (
     <div className="modal-overlay" onClick={closeModal}>
       <div 
-        className="glass-panel animate-fade-in"
+        className="glass-panel animate-fade-in modal-form-panel"
         onClick={(e) => e.stopPropagation()}
         style={{
           maxWidth: '540px',
@@ -126,7 +126,7 @@ export default function VaultItemModal() {
 
         <form onSubmit={handleSubmit}>
           {/* Category Tabs */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+          <div className="modal-category-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
             {categories.map(cat => {
               const Icon = cat.icon;
               const isSelected = category === cat.id;
@@ -311,7 +311,7 @@ export default function VaultItemModal() {
           </div>
 
           {/* Actions */}
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+          <div className="modal-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
             <button type="button" onClick={closeModal} className="btn-secondary">
               Cancel
             </button>

@@ -1,19 +1,19 @@
 import React from 'react';
 import { useVault } from '../../context/VaultContext';
 import { useAuth } from '../../context/AuthContext';
-import { Search, Plus, Download, ShieldCheck, Command, User, LogOut } from 'lucide-react';
+import { Search, Plus, Download, ShieldCheck, Command, User, Menu } from 'lucide-react';
 import { exportEncryptedVault } from '../../utils/exportImport';
 
-export default function Header() {
-  const { 
-    items, 
-    activeCategory, 
-    searchQuery, 
+export default function Header({ onMenuClick }) {
+  const {
+    items,
+    activeCategory,
+    searchQuery,
     setIsCommandPaletteOpen,
-    openNewItemModal 
+    openNewItemModal
   } = useVault();
 
-  const { userEmail, lockVault } = useAuth();
+  const { userEmail } = useAuth();
 
   const titles = {
     all: 'All Vault Entries',
@@ -25,102 +25,72 @@ export default function Header() {
     security: 'Security & Health Audit Dashboard'
   };
 
-  const handleExport = () => {
-    exportEncryptedVault();
-  };
+  const handleExport = () => exportEncryptedVault();
 
   return (
-    <header style={{
-      height: 'var(--header-height)',
-      position: 'fixed',
-      top: 0,
-      left: 'var(--sidebar-width)',
-      right: 0,
-      background: 'rgba(10, 14, 22, 0.85)',
-      backdropFilter: 'var(--backdrop-blur)',
-      borderBottom: '1px solid var(--border-subtle)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 28px',
-      zIndex: 90
-    }}>
-      {/* Title */}
-      <div>
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff' }}>
-          {titles[activeCategory] || 'Vault Data Control Center'}
-        </h1>
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          {items.length} items encrypted with client-side AES-GCM 256-bit key
+    <header className="app-header">
+      <div className="header-left">
+        <button
+          type="button"
+          className="mobile-menu-button"
+          onClick={onMenuClick}
+          aria-label="Open navigation menu"
+        >
+          <Menu size={20} />
+        </button>
+
+        <div className="header-title-wrap">
+          <h1>{titles[activeCategory] || 'Vault Data Control Center'}</h1>
+          <div className="header-subtitle">
+            {items.length} items encrypted with client-side AES-GCM 256-bit key
+          </div>
         </div>
       </div>
 
-      {/* Center Search / Cmd+K Launcher */}
-      <div 
+      <div
         onClick={() => setIsCommandPaletteOpen(true)}
-        className="glass-input"
-        style={{
-          maxWidth: '360px',
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          cursor: 'pointer',
-          padding: '8px 14px',
-          background: 'rgba(18, 24, 36, 0.6)'
+        className="glass-input header-search"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') setIsCommandPaletteOpen(true);
         }}
       >
         <Search size={16} color="var(--text-muted)" />
-        <span style={{ fontSize: '0.84rem', color: searchQuery ? '#fff' : 'var(--text-muted)', flex: 1 }}>
+        <span className="header-search-text">
           {searchQuery || 'Search vault or press Cmd+K...'}
         </span>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '3px',
-          background: 'rgba(255, 255, 255, 0.08)',
-          padding: '2px 6px',
-          borderRadius: '4px',
-          fontSize: '0.7rem',
-          color: 'var(--text-secondary)'
-        }}>
+        <div className="header-shortcut">
           <Command size={11} />
           <span>K</span>
         </div>
       </div>
 
-      {/* Actions & User Pill */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* User Email Pill */}
+      <div className="header-actions">
         {userEmail && (
-          <div className="badge badge-cyan" style={{ padding: '5px 10px', fontSize: '0.75rem', textTransform: 'none', display: 'flex', gap: '6px' }}>
+          <div className="badge badge-cyan header-user-email">
             <User size={13} />
             <span>{userEmail}</span>
           </div>
         )}
 
-        {/* Export Backup */}
-        <button 
+        <button
           onClick={handleExport}
-          className="btn-secondary"
+          className="btn-secondary header-backup"
           title="Export Encrypted Backup JSON"
-          style={{ padding: '8px 12px', fontSize: '0.8rem' }}
         >
           <Download size={15} />
           <span>Backup</span>
         </button>
 
-        {/* Security Health Pill */}
-        <div className="badge badge-emerald" style={{ padding: '6px 12px', display: 'flex', gap: '6px' }}>
+        <div className="badge badge-emerald header-security">
           <ShieldCheck size={14} />
           <span>96% SECURE</span>
         </div>
 
-        {/* Quick Add Button */}
-        <button 
+        <button
           onClick={() => openNewItemModal(activeCategory === 'all' || activeCategory === 'graph' || activeCategory === 'security' ? 'notes' : activeCategory)}
-          className="btn-primary"
-          style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+          className="btn-primary header-new-entry"
         >
           <Plus size={18} />
           <span>New Entry</span>

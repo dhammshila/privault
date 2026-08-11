@@ -116,7 +116,7 @@ export default function CommandPalette() {
   return (
     <div className="modal-overlay" onClick={() => setIsCommandPaletteOpen(false)}>
       <div 
-        className="glass-panel animate-fade-in" 
+        className="glass-panel animate-fade-in command-palette-panel" 
         onClick={(e) => e.stopPropagation()}
         style={{
           maxWidth: '600px',

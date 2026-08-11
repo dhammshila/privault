@@ -209,7 +209,7 @@ export default function MasterLockModal() {
   return (
     <div className="modal-overlay">
       <div
-        className="glass-panel animate-fade-in"
+        className="glass-panel animate-fade-in auth-modal-panel"
         style={{
           maxWidth: '480px',
           width: '100%',

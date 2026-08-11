@@ -17,7 +17,7 @@ import {
   LogOut
 } from 'lucide-react';
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen = false, onClose = () => {} }) {
   const { 
     items, 
     activeCategory, 
@@ -48,7 +48,9 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside style={{
+    <>
+      {isOpen && <button className="sidebar-overlay" aria-label="Close navigation menu" onClick={onClose} />}
+      <aside className={`app-sidebar ${isOpen ? 'is-open' : ''}`} style={{
       width: 'var(--sidebar-width)',
       height: '100vh',
       background: 'rgba(10, 14, 22, 0.85)',
@@ -129,6 +131,7 @@ export default function Sidebar() {
                   onClick={() => {
                     setActiveCategory(item.id);
                     setSelectedTag(null);
+                    onClose();
                   }}
                   style={{
                     width: '100%',
@@ -196,7 +199,7 @@ export default function Sidebar() {
               {allTags.map(tag => (
                 <button
                   key={tag}
-                  onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                  onClick={() => { setSelectedTag(selectedTag === tag ? null : tag); onClose(); }}
                   className={`badge ${selectedTag === tag ? 'badge-cyan' : ''}`}
                   style={{
                     background: selectedTag === tag ? 'rgba(0, 242, 254, 0.2)' : 'rgba(255, 255, 255, 0.04)',
@@ -235,7 +238,7 @@ export default function Sidebar() {
         )}
 
         <button
-          onClick={lockVault}
+          onClick={() => { lockVault(); onClose(); }}
           className="btn-secondary"
           style={{ width: '100%', justifyContent: 'center', color: 'var(--accent-rose)', borderColor: 'rgba(244, 63, 94, 0.3)', padding: '8px' }}
         >
@@ -243,6 +246,7 @@ export default function Sidebar() {
           <span>Lock / Sign Out</span>
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

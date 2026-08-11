@@ -113,10 +113,10 @@ export default function KnowledgeGraph() {
   };
 
   return (
-    <div className="glass-panel" style={{ padding: '24px', height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
+    <div className="glass-panel graph-panel" style={{ padding: '24px', height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
       {/* Header Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div className="graph-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <div className="graph-heading" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Network size={22} color="var(--accent-cyan)" />
           <div>
             <h2 style={{ fontSize: '1.1rem', color: '#fff' }}>Interactive Personal Knowledge Graph</h2>
@@ -127,7 +127,7 @@ export default function KnowledgeGraph() {
         </div>
 
         {/* Legend Pills */}
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="graph-legend" style={{ display: 'flex', gap: '8px' }}>
           <span className="badge badge-cyan" style={{ fontSize: '0.68rem' }}>Tag Hubs</span>
           <span className="badge badge-rose" style={{ fontSize: '0.68rem' }}>Credentials</span>
           <span className="badge badge-violet" style={{ fontSize: '0.68rem' }}>Snippets</span>
@@ -136,7 +136,7 @@ export default function KnowledgeGraph() {
       </div>
 
       {/* Canvas Viewport */}
-      <div style={{
+      <div className="graph-canvas" style={{
         flex: 1,
         background: 'rgba(8, 11, 16, 0.9)',
         borderRadius: 'var(--radius-lg)',
@@ -149,8 +149,8 @@ export default function KnowledgeGraph() {
           width="100%"
           height="100%"
           viewBox="0 0 800 500"
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
+          onPointerMove={handleMouseMove}
+          onPointerUp={handleMouseUp}
           style={{ cursor: draggingNodeId ? 'grabbing' : 'default' }}
         >
           {/* Edges */}
@@ -186,10 +186,10 @@ export default function KnowledgeGraph() {
               <g
                 key={node.id}
                 transform={`translate(${node.x}, ${node.y})`}
-                onMouseDown={(e) => handleMouseDown(e, node)}
+                onPointerDown={(e) => handleMouseDown(e, node)}
                 onClick={() => handleNodeClick(node)}
-                onMouseEnter={() => setHoveredNodeId(node.id)}
-                onMouseLeave={() => setHoveredNodeId(null)}
+                onPointerEnter={() => setHoveredNodeId(node.id)}
+                onPointerLeave={() => setHoveredNodeId(null)}
                 style={{ cursor: 'pointer' }}
               >
                 {/* Glow ring on hover */}
