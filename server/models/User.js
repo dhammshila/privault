@@ -1,0 +1,41 @@
+import mongoose from "mongoose";
+
+const serviceSchema = new mongoose.Schema(
+  {
+    id: String,
+    name: String,
+    meta: Object
+  },
+  { _id: false }
+);
+
+const userSchema = new mongoose.Schema(
+  {
+    username: String,
+
+    email: {
+      type: String,
+      required: true,
+      unique: true
+    },
+
+    passwordHash: {
+      type: String,
+      required: true
+    },
+
+    connectedServices: {
+      type: [serviceSchema],
+      default: []
+    },
+
+    preferences: {
+      type: Map,
+      of: Object,
+      default: {}
+    }
+  },
+  { timestamps: true }
+);
+
+export default mongoose.model("User", userSchema);

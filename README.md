@@ -69,7 +69,7 @@ npm run build
 ## 🏆 Evaluator Fast-Track Guide
 
 When reviewing the application:
-1. Open the app in your browser (`http://localhost:3000`).
+1. Open the app in your browser (`https://privault-lime.vercel.app`).
 2. Click **"Load Demo Vault"** on the lock screen to instantly decrypt pre-loaded seed entries.
 3. Press **`Cmd + K`** (or `Ctrl + K`) to launch the global command palette.
 4. Click **Knowledge Graph** in the sidebar to explore the interactive drag-and-drop tag node canvas.
