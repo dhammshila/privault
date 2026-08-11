@@ -18,51 +18,96 @@ const COOKIE_OPTS = {
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: 'Email and password required' });
-    const exists = await User.findOne({ email });
-    if (exists) return res.status(409).json({ message: 'Email already in use' });
-    const passwordHash = await bcrypt.hash(password, 10);
-    const user = await User.create({ username, email, passwordHash });
-    res.json({ id: user._id, email: user.email, username: user.username });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    
+    // Check existing account
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(409).json({ message: 'An account with this email already exists. Please sign in instead.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    const newUser = await User.create({
+      username: username || normalizedEmail.split('@')[0],
+      email: normalizedEmail,
+      passwordHash
+    });
+
+    // Auto-login after registration
+    const token = jwt.sign({ sub: newUser._id }, JWT_SECRET, { expiresIn: '7d' });
+    res.cookie('token', token, COOKIE_OPTS);
+
+    return res.status(201).json({
+      id: newUser._id,
+      email: newUser.email,
+      username: newUser.username
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    if (err.code === 11000) {
+      return res.status(409).json({ message: 'An account with this email already exists.' });
+    }
+    console.error('Registration error:', err);
+    return res.status(500).json({ message: 'Server error during registration' });
   }
 });
 
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: 'Email and password required' });
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
-    const ok = await bcrypt.compare(password, user.passwordHash);
-    if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      return res.status(404).json({ message: 'No registered account found with this email address.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Incorrect password. Please try again.' });
+    }
+
     const token = jwt.sign({ sub: user._id }, JWT_SECRET, { expiresIn: '7d' });
     res.cookie('token', token, COOKIE_OPTS);
-    res.json({ message: 'Logged in' });
+
+    return res.json({
+      id: user._id,
+      email: user.email,
+      username: user.username,
+      message: 'Logged in successfully'
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Login error:', err);
+    return res.status(500).json({ message: 'Server error during login' });
   }
 });
 
 router.post('/logout', (req, res) => {
-  res.clearCookie('token', { sameSite: COOKIE_OPTS.sameSite, secure: COOKIE_OPTS.secure });
-  res.json({ message: 'Logged out' });
+  res.clearCookie('token', COOKIE_OPTS);
+  res.json({ message: 'Logged out successfully' });
 });
 
 router.get('/me', async (req, res) => {
   try {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: 'Not authenticated' });
+
     const payload = jwt.verify(token, JWT_SECRET);
     const user = await User.findById(payload.sub).select('-passwordHash');
     if (!user) return res.status(404).json({ message: 'User not found' });
+
     res.json(user);
   } catch (err) {
-    console.error(err);
-    res.status(401).json({ message: 'Invalid token' });
+    res.status(401).json({ message: 'Invalid or expired token' });
   }
 });
 

@@ -31,10 +31,10 @@ export const AuthProvider = ({ children }) => {
     try {
       await api.post('/auth/login', credentials);
       await fetchMe();
-      return true;
+      return { success: true };
     } catch (err) {
-      console.error('Login error', err);
-      return false;
+      const msg = err.response?.data?.message || 'Login failed';
+      return { success: false, error: msg };
     } finally {
       setIsLoading(false);
     }
@@ -44,10 +44,11 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true);
     try {
       await api.post('/auth/register', data);
-      return true;
+      await fetchMe();
+      return { success: true };
     } catch (err) {
-      console.error('Register error', err);
-      return false;
+      const msg = err.response?.data?.message || 'Registration failed';
+      return { success: false, error: msg };
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +58,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await api.post('/auth/logout');
     } catch (err) {
-      console.warn('Logout warning', err);
+      console.warn('Logout issue', err);
     }
     setUser(null);
     setIsAuthenticated(false);
