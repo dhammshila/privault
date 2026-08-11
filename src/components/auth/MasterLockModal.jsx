@@ -415,7 +415,7 @@ export default function MasterLockModal() {
                   onChange={(e) =>
                     setEmail(e.target.value)
                   }
-                  placeholder="student@iiitl.ac.in"
+                  placeholder="Enter your email"
                   className="glass-input"
                   required
                 />
@@ -594,7 +594,7 @@ export default function MasterLockModal() {
                   onChange={(e) =>
                     setEmail(e.target.value)
                   }
-                  placeholder="name@iiitl.ac.in"
+                  placeholder="Enter your email"
                   className="glass-input"
                   required
                 />
@@ -837,7 +837,7 @@ export default function MasterLockModal() {
                     onChange={(e) =>
                       setEmail(e.target.value)
                     }
-                    placeholder="registered.email@iiitl.ac.in"
+                    placeholder="Enter your email"
                     className="glass-input"
                     required
                   />
