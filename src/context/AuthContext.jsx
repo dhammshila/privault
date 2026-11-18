@@ -119,18 +119,34 @@ export function AuthProvider({ children }) {
 
     const resetLink = `${window.location.origin}/reset-password`;
 
-    const response = await fetch('/api/send-reset-email', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email,
-        resetLink,
-      }),
-    });
+    let response;
+    let data;
 
-    const data = await response.json();
+    try {
+      response = await fetch('/api/send-reset-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          resetLink,
+        }),
+      });
+    } catch (networkErr) {
+      throw new Error('Network error. Please check your connection and try again.');
+    }
+
+    // Safely parse JSON response
+    try {
+      const text = await response.text();
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      if (!response.ok) {
+        throw new Error('Email service temporarily unavailable. Please try again later.');
+      }
+      throw new Error('Unexpected response from server.');
+    }
 
     if (!response.ok) {
       throw new Error(

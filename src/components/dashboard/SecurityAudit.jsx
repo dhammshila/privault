@@ -34,10 +34,10 @@ export default function SecurityAudit() {
     self.findIndex(other => other.plainData?.secretKey === c.plainData?.secretKey) !== idx
   );
 
-  // Compute security score
-  let score = 100;
-  if (weakCredentials.length > 0) score -= 15;
-  if (duplicateKeys.length > 0) score -= 20;
+  // Compute security score (max 99% — 1% always reserved for browser-level risks)
+  let score = 99;
+  if (weakCredentials.length > 0) score -= 14;
+  if (duplicateKeys.length > 0) score -= 19;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
