@@ -185,14 +185,17 @@ export default function MasterLockModal() {
         `📧 Password reset email sent to ${email}. Check your inbox for instructions.`
       );
     } catch (err) {
-      // Provide a friendly error for Vercel/SMTP issues
       const msg = err.message || '';
-      if (msg.includes('JSON') || msg.includes('server') || msg.includes('send')) {
-        setErrorMsg(
-          '📬 Email service is temporarily unavailable. Please try again later or contact support. Your vault is safe.'
-        );
+      // Show the exact server message — it now always comes back as JSON
+      // Add a helpful note for RESEND_API_KEY not configured
+      if (msg.toLowerCase().includes('resend_api_key') || msg.toLowerCase().includes('not configured') || msg.toLowerCase().includes('environment')) {
+        setErrorMsg('⚙️ Email service setup incomplete. Please add RESEND_API_KEY to Vercel environment variables to enable password reset emails.');
+      } else if (msg.toLowerCase().includes('network') || msg.toLowerCase().includes('failed to fetch')) {
+        setErrorMsg('🌐 Network error. Please check your internet connection and try again.');
+      } else if (msg) {
+        setErrorMsg(msg);
       } else {
-        setErrorMsg(msg || 'Failed to send password reset email.');
+        setErrorMsg('Failed to send password reset email. Please try again later.');
       }
     } finally {
       setLoading(false);
