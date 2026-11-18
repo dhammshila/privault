@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { clearVaultData } from '../../utils/storage';
 import {
   Lock,
   Key,
@@ -516,6 +517,48 @@ export default function MasterLockModal() {
                 <Key size={14} />
                 Sign In to Existing Account →
               </button>
+            )}
+
+            {/* Hash mismatch / wrong password: offer reset or wipe */}
+            {!duplicateAccount && errorMsg && errorMsg.toLowerCase().includes('mismatch') && (
+              <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => changeView('forgot')}
+                  style={{
+                    width: '100%', padding: '8px 12px',
+                    background: 'rgba(0,242,254,0.1)',
+                    border: '1px solid rgba(0,242,254,0.4)',
+                    borderRadius: 'var(--radius-sm)',
+                    color: 'var(--accent-cyan)',
+                    fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                  }}
+                >
+                  <Mail size={14} />
+                  Send Password Reset Email →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm('⚠️ This will permanently wipe your vault and all encrypted data. This cannot be undone. Continue?')) {
+                      clearVaultData();
+                      window.location.reload();
+                    }
+                  }}
+                  style={{
+                    width: '100%', padding: '7px 12px',
+                    background: 'rgba(239,68,68,0.08)',
+                    border: '1px solid rgba(239,68,68,0.3)',
+                    borderRadius: 'var(--radius-sm)',
+                    color: '#fca5a5',
+                    fontSize: '0.78rem', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                  }}
+                >
+                  🗑️ Wipe vault & start fresh
+                </button>
+              </div>
             )}
           </div>
         )}

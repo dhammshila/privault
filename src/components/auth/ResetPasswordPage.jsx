@@ -4,6 +4,7 @@ import { generateSaltHex, hashPassword } from '../../utils/crypto';
 import {
   saveVaultSalt,
   saveVaultAuthHash,
+  saveVaultUserEmail,
   getVaultUserEmail,
   clearVaultData,
 } from '../../utils/storage';
@@ -58,7 +59,7 @@ export default function ResetPasswordPage() {
       saveVaultSalt(newSalt);
       saveVaultAuthHash(newHash);
       if (savedEmail) {
-        localStorage.setItem('vault_user_email_v1', savedEmail);
+        saveVaultUserEmail(savedEmail);
       }
 
       setDone(true);
