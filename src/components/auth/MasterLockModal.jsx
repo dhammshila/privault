@@ -39,6 +39,7 @@ export default function MasterLockModal() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [duplicateAccount, setDuplicateAccount] = useState(false); // tracks duplicate email error
 
   // Password strength
   const getPasswordStrength = (pass) => {
@@ -138,9 +139,17 @@ export default function MasterLockModal() {
       await signUpWithEmail(email, password);
     } catch (err) {
       const msg = err.message || 'Sign up failed.';
-      if (msg.toLowerCase().includes('already exists') || msg.includes('409')) {
-        setErrorMsg('An account with this email already exists. Please sign in instead.');
+      // Check if it's a duplicate account error
+      if (
+        msg.toLowerCase().includes('already exists') ||
+        msg.toLowerCase().includes('already has a vault') ||
+        msg.includes('sign in instead') ||
+        msg.includes('409')
+      ) {
+        setDuplicateAccount(true);
+        setErrorMsg(msg);
       } else {
+        setDuplicateAccount(false);
         setErrorMsg(msg);
       }
     } finally {
@@ -216,6 +225,7 @@ export default function MasterLockModal() {
     setSuccessMsg('');
     setPassword('');
     setConfirmPassword('');
+    setDuplicateAccount(false);
   };
 
   return (
@@ -353,22 +363,52 @@ export default function MasterLockModal() {
         {errorMsg && (
           <div
             style={{
-              background:
-                'rgba(244, 63, 94, 0.12)',
-              border:
-                '1px solid rgba(244, 63, 94, 0.3)',
+              background: duplicateAccount
+                ? 'rgba(251, 191, 36, 0.10)'
+                : 'rgba(244, 63, 94, 0.12)',
+              border: duplicateAccount
+                ? '1px solid rgba(251, 191, 36, 0.4)'
+                : '1px solid rgba(244, 63, 94, 0.3)',
               borderRadius: 'var(--radius-sm)',
-              padding: '10px 12px',
-              color: 'var(--accent-rose)',
+              padding: '12px 14px',
+              color: duplicateAccount
+                ? 'var(--accent-amber)'
+                : 'var(--accent-rose)',
               fontSize: '0.82rem',
               marginBottom: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
             }}
           >
-            <AlertTriangle size={16} />
-            <span>{errorMsg}</span>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: '1px' }} />
+              <span>{errorMsg}</span>
+            </div>
+
+            {/* Duplicate account: show quick "Sign In" action */}
+            {duplicateAccount && (
+              <button
+                type="button"
+                onClick={() => changeView('login')}
+                style={{
+                  marginTop: '10px',
+                  width: '100%',
+                  padding: '8px 12px',
+                  background: 'rgba(251, 191, 36, 0.15)',
+                  border: '1px solid rgba(251, 191, 36, 0.5)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--accent-amber)',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                <Key size={14} />
+                Sign In to Existing Account →
+              </button>
+            )}
           </div>
         )}
 

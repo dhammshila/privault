@@ -53,6 +53,32 @@ export function AuthProvider({ children }) {
 
   // Sign Up with Email & Password
   const signUpWithEmail = async (email, password) => {
+    // ── Duplicate account prevention ───────────────────────────────────────
+    const existingSalt = getVaultSalt();
+    const existingHash = getVaultAuthHash();
+    const existingEmail = getVaultUserEmail();
+
+    if (existingSalt && existingHash) {
+      // A vault already exists on this device
+      if (existingEmail && existingEmail.toLowerCase() === email.trim().toLowerCase()) {
+        // Same email — tell them to sign in
+        throw new Error(
+          'An account with this email already exists on this device. Please sign in instead.'
+        );
+      } else if (existingEmail) {
+        // Different email — another account is already registered
+        throw new Error(
+          `This device already has a vault for "${existingEmail}". Please sign in with that account, or wipe the vault first to start fresh.`
+        );
+      } else {
+        // Vault exists but no email saved — still initialized, block overwrite
+        throw new Error(
+          'A vault already exists on this device. Please sign in to access it.'
+        );
+      }
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     const newSalt = generateSaltHex();
     const newHash = await hashPassword(password, newSalt);
     const newDerivedKey = await deriveKey(password, newSalt);
