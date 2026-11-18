@@ -11,8 +11,7 @@ import {
   RefreshCw,
   AlertTriangle,
   ArrowLeft,
-  CheckCircle2,
-  Chrome
+  CheckCircle2
 } from 'lucide-react';
 
 export default function MasterLockModal() {
