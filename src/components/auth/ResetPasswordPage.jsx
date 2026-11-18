@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, Eye, EyeOff, ShieldCheck, AlertTriangle, CheckCircle2, KeyRound, ArrowLeft } from 'lucide-react';
-import { hashPassword, deriveKey } from '../../utils/crypto';
+import { generateSaltHex, hashPassword } from '../../utils/crypto';
 import {
-  generateSaltHex,
   saveVaultSalt,
   saveVaultAuthHash,
   getVaultUserEmail,
