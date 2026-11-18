@@ -43,75 +43,107 @@ export default function MasterLockModal() {
   // -------------------------
   // GOOGLE SIGN-IN
   // -------------------------
-  const handleGoogleSignIn = useCallback(() => {
-    setErrorMsg('');
-    setSuccessMsg('');
 
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      setErrorMsg('Google Sign-In is not configured yet. Use email & password for now.');
-      return;
-    }
+  // Handles the credential JWT returned by Google after user picks account
+  const handleGoogleCredential = useCallback(async (response) => {
+    try {
+      setLoading(true);
+      setErrorMsg('');
+      // Decode JWT payload (base64url → JSON)
+      const payload = JSON.parse(atob(response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      const googleEmail = payload.email;
+      const googleSub = payload.sub; // stable, unique per Google account
+      const googlePassword = `gsi_${googleSub}`; // deterministic vault key
 
-    if (!window.google?.accounts?.id) {
-      setErrorMsg('Google Sign-In failed to load. Please refresh the page and try again.');
-      return;
-    }
-
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: async (response) => {
-        try {
-          // Decode JWT payload from Google
-          const payload = JSON.parse(atob(response.credential.split('.')[1]));
-          const googleEmail = payload.email;
-          const googleSub = payload.sub; // unique stable Google user ID
-
-          // Use Google sub as the master password (deterministic, user-specific)
-          const googlePassword = `google_${googleSub}`;
-
-          if (viewMode === 'signup') {
-            await signUpWithEmail(googleEmail, googlePassword);
-          } else {
-            const success = await loginWithEmail(googleEmail, googlePassword);
-            if (!success) {
-              // Vault exists but was created with a different password
-              setErrorMsg('No Google-linked vault found. Please create a new account with Google Sign-Up, or use your email & password.');
-              return;
-            }
-          }
-        } catch (err) {
-          const msg = err.message || '';
-          if (msg.toLowerCase().includes('already exists') || msg.toLowerCase().includes('already has a vault')) {
-            setDuplicateAccount(true);
-            setErrorMsg(msg);
-          } else {
-            setErrorMsg(err.message || 'Google Sign-In failed.');
-          }
+      if (viewMode === 'signup') {
+        await signUpWithEmail(googleEmail, googlePassword);
+      } else {
+        const success = await loginWithEmail(googleEmail, googlePassword);
+        if (!success) {
+          setErrorMsg('No Google-linked vault found for this account. Try "Sign up with Google" to create one.');
         }
-      },
-      use_fedcm_for_prompt: true,
-    });
-
-    window.google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        // Fallback: render a popup directly
-        const btn = document.getElementById('google-signin-btn-hidden');
-        if (btn) btn.click();
       }
-    });
+    } catch (err) {
+      const msg = err?.message || '';
+      if (msg.toLowerCase().includes('already exists') || msg.toLowerCase().includes('already has a vault')) {
+        setDuplicateAccount(true);
+        setErrorMsg(msg);
+      } else {
+        setErrorMsg(msg || 'Google Sign-In failed. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   }, [viewMode, signUpWithEmail, loginWithEmail]);
 
-  // Load Google Identity Services script
-  useEffect(() => {
-    if (document.getElementById('google-gsi-script')) return;
-    const script = document.createElement('script');
-    script.id = 'google-gsi-script';
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
+  // Clicked our styled Google button → click the hidden rendered Google button
+  const handleGoogleSignIn = useCallback(() => {
+    setErrorMsg('');
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      setErrorMsg('Google Sign-In is not configured. Use email & password for now.');
+      return;
+    }
+    // Find the real Google button Google rendered inside the hidden container and click it
+    const hiddenContainer = document.getElementById('google-btn-hidden-container');
+    if (hiddenContainer) {
+      const realBtn = hiddenContainer.querySelector('[role="button"], button, div[tabindex]');
+      if (realBtn) {
+        realBtn.click();
+        return;
+      }
+    }
+    setErrorMsg('Google Sign-In is loading. Please wait a moment and try again.');
   }, []);
+
+  // Load GSI script + render a hidden Google button (this is what actually opens the popup)
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    const initGoogleBtn = () => {
+      if (!window.google?.accounts?.id) return;
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleCredential,
+        ux_mode: 'popup',
+        use_fedcm_for_prompt: false,
+      });
+      const container = document.getElementById('google-btn-hidden-container');
+      if (container && container.childElementCount === 0) {
+        window.google.accounts.id.renderButton(container, {
+          type: 'standard',
+          theme: 'filled_black',
+          size: 'large',
+          text: 'signin_with',
+          shape: 'rectangular',
+        });
+      }
+    };
+
+    if (window.google?.accounts?.id) {
+      initGoogleBtn();
+    } else {
+      if (!document.getElementById('google-gsi-script')) {
+        const script = document.createElement('script');
+        script.id = 'google-gsi-script';
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = initGoogleBtn;
+        document.head.appendChild(script);
+      } else {
+        // Script tag exists but may still be loading
+        const interval = setInterval(() => {
+          if (window.google?.accounts?.id) {
+            clearInterval(interval);
+            initGoogleBtn();
+          }
+        }, 200);
+        return () => clearInterval(interval);
+      }
+    }
+  }, [handleGoogleCredential]);
 
   // Password strength
   const getPasswordStrength = (pass) => {
@@ -316,6 +348,13 @@ export default function MasterLockModal() {
             'var(--glow-cyan), 0 20px 50px rgba(0,0,0,0.8)'
         }}
       >
+
+        {/* Hidden Google button — GSI renders a real clickable button here;
+            our styled button click delegates to it so the popup actually opens */}
+        <div
+          id="google-btn-hidden-container"
+          style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', top: 0, left: 0, zIndex: -1 }}
+        />
 
         {/* -------------------------
             HEADER
