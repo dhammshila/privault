@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { VaultProvider, useVault } from './context/VaultContext';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import CommandPalette from './components/layout/CommandPalette';
 import MasterLockModal from './components/auth/MasterLockModal';
+import ResetPasswordPage from './components/auth/ResetPasswordPage';
 import VaultCard from './components/vault/VaultCard';
 import VaultItemModal from './components/vault/VaultItemModal';
 import KnowledgeGraph from './components/graph/KnowledgeGraph';
@@ -102,10 +104,23 @@ function MainVaultView() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <VaultProvider>
-        <MainVaultView />
-      </VaultProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <Routes>
+        {/* Reset password — accessible without auth */}
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+        {/* Main vault app */}
+        <Route
+          path="/*"
+          element={
+            <AuthProvider>
+              <VaultProvider>
+                <MainVaultView />
+              </VaultProvider>
+            </AuthProvider>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }

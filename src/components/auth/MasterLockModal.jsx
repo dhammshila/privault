@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
   Lock,
@@ -39,6 +39,79 @@ export default function MasterLockModal() {
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
   const [duplicateAccount, setDuplicateAccount] = useState(false); // tracks duplicate email error
+
+  // -------------------------
+  // GOOGLE SIGN-IN
+  // -------------------------
+  const handleGoogleSignIn = useCallback(() => {
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      setErrorMsg('Google Sign-In is not configured yet. Use email & password for now.');
+      return;
+    }
+
+    if (!window.google?.accounts?.id) {
+      setErrorMsg('Google Sign-In failed to load. Please refresh the page and try again.');
+      return;
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: async (response) => {
+        try {
+          // Decode JWT payload from Google
+          const payload = JSON.parse(atob(response.credential.split('.')[1]));
+          const googleEmail = payload.email;
+          const googleSub = payload.sub; // unique stable Google user ID
+
+          // Use Google sub as the master password (deterministic, user-specific)
+          const googlePassword = `google_${googleSub}`;
+
+          if (viewMode === 'signup') {
+            await signUpWithEmail(googleEmail, googlePassword);
+          } else {
+            const success = await loginWithEmail(googleEmail, googlePassword);
+            if (!success) {
+              // Vault exists but was created with a different password
+              setErrorMsg('No Google-linked vault found. Please create a new account with Google Sign-Up, or use your email & password.');
+              return;
+            }
+          }
+        } catch (err) {
+          const msg = err.message || '';
+          if (msg.toLowerCase().includes('already exists') || msg.toLowerCase().includes('already has a vault')) {
+            setDuplicateAccount(true);
+            setErrorMsg(msg);
+          } else {
+            setErrorMsg(err.message || 'Google Sign-In failed.');
+          }
+        }
+      },
+      use_fedcm_for_prompt: true,
+    });
+
+    window.google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        // Fallback: render a popup directly
+        const btn = document.getElementById('google-signin-btn-hidden');
+        if (btn) btn.click();
+      }
+    });
+  }, [viewMode, signUpWithEmail, loginWithEmail]);
+
+  // Load Google Identity Services script
+  useEffect(() => {
+    if (document.getElementById('google-gsi-script')) return;
+    const script = document.createElement('script');
+    script.id = 'google-gsi-script';
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  }, []);
 
   // Password strength
   const getPasswordStrength = (pass) => {
@@ -603,9 +676,7 @@ export default function MasterLockModal() {
             <button
               type="button"
               disabled={loading}
-              onClick={() => {
-                setErrorMsg('Google Sign-In coming soon. Use email & password for now.');
-              }}
+              onClick={handleGoogleSignIn}
               style={{
                 width: '100%',
                 display: 'flex',
@@ -882,9 +953,7 @@ export default function MasterLockModal() {
             <button
               type="button"
               disabled={loading}
-              onClick={() => {
-                setErrorMsg('Google Sign-In coming soon. Use email & password for now.');
-              }}
+              onClick={handleGoogleSignIn}
               style={{
                 width: '100%',
                 display: 'flex',
