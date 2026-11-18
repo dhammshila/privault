@@ -96,10 +96,22 @@ export default function MasterLockModal() {
     setErrorMsg('Google Sign-In is loading. Please wait a moment and try again.');
   }, []);
 
-  // Load GSI script + render a hidden Google button (this is what actually opens the popup)
+  // Load GSI script + render hidden Google buttons over both login & signup buttons
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     if (!clientId) return;
+
+    const renderInto = (containerId) => {
+      const container = document.getElementById(containerId);
+      if (container && window.google?.accounts?.id && container.childElementCount === 0) {
+        window.google.accounts.id.renderButton(container, {
+          type: 'standard',
+          theme: 'filled_black',
+          size: 'large',
+          width: 400,
+        });
+      }
+    };
 
     const initGoogleBtn = () => {
       if (!window.google?.accounts?.id) return;
@@ -109,39 +121,28 @@ export default function MasterLockModal() {
         ux_mode: 'popup',
         use_fedcm_for_prompt: false,
       });
-      const container = document.getElementById('google-btn-hidden-container');
-      if (container && container.childElementCount === 0) {
-        window.google.accounts.id.renderButton(container, {
-          type: 'standard',
-          theme: 'filled_black',
-          size: 'large',
-          text: 'signin_with',
-          shape: 'rectangular',
-        });
-      }
+      renderInto('google-btn-hidden-container');
+      renderInto('google-btn-hidden-container-signup');
     };
 
     if (window.google?.accounts?.id) {
       initGoogleBtn();
+    } else if (!document.getElementById('google-gsi-script')) {
+      const script = document.createElement('script');
+      script.id = 'google-gsi-script';
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = initGoogleBtn;
+      document.head.appendChild(script);
     } else {
-      if (!document.getElementById('google-gsi-script')) {
-        const script = document.createElement('script');
-        script.id = 'google-gsi-script';
-        script.src = 'https://accounts.google.com/gsi/client';
-        script.async = true;
-        script.defer = true;
-        script.onload = initGoogleBtn;
-        document.head.appendChild(script);
-      } else {
-        // Script tag exists but may still be loading
-        const interval = setInterval(() => {
-          if (window.google?.accounts?.id) {
-            clearInterval(interval);
-            initGoogleBtn();
-          }
-        }, 200);
-        return () => clearInterval(interval);
-      }
+      const interval = setInterval(() => {
+        if (window.google?.accounts?.id) {
+          clearInterval(interval);
+          initGoogleBtn();
+        }
+      }, 150);
+      return () => clearInterval(interval);
     }
   }, [handleGoogleCredential]);
 
@@ -348,13 +349,6 @@ export default function MasterLockModal() {
             'var(--glow-cyan), 0 20px 50px rgba(0,0,0,0.8)'
         }}
       >
-
-        {/* Hidden Google button — GSI renders a real clickable button here;
-            our styled button click delegates to it so the popup actually opens */}
-        <div
-          id="google-btn-hidden-container"
-          style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', top: 0, left: 0, zIndex: -1 }}
-        />
 
         {/* -------------------------
             HEADER
@@ -711,38 +705,39 @@ export default function MasterLockModal() {
               <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
             </div>
 
-            {/* Google Sign In */}
-            <button
-              type="button"
-              disabled={loading}
-              onClick={handleGoogleSignIn}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                padding: '11px 16px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 'var(--radius-md)',
-                color: '#fff',
-                fontSize: '0.88rem',
-                cursor: 'pointer',
-                marginBottom: '14px',
-                transition: 'background 0.2s'
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-            >
-              <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.4 7 29.5 5 24 5 13 5 4 14 4 25s9 20 20 20 20-9 20-20c0-1.2-.1-2.3-.4-3.5z" fill="#FFC107"/>
-                <path d="M6.3 15.2l6.6 4.8C14.6 16.5 19 14 24 14c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.4 8 29.5 6 24 6 16.3 6 9.6 9.7 6.3 15.2z" fill="#FF3D00"/>
-                <path d="M24 44c5.4 0 10.2-1.9 13.9-5.1l-6.4-5.4C29.6 35.4 26.9 36 24 36c-5.2 0-9.6-3.3-11.3-8H6.1C9.3 37.6 16.1 44 24 44z" fill="#4CAF50"/>
-                <path d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.4 5.4C41.9 35.6 44 30.7 44 25c0-1.2-.1-2.3-.4-3.5z" fill="#1976D2"/>
-              </svg>
-              Continue with Google
-            </button>
+            {/* Google Sign In — our button is visual only; the GSI iframe overlays it */}
+            <div style={{ position: 'relative', marginBottom: '14px', height: '42px' }}>
+              {/* Visual styled button (pointer-events off so iframe above captures clicks) */}
+              <div
+                style={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  gap: '10px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: 'var(--radius-md)',
+                  color: '#fff', fontSize: '0.88rem',
+                  pointerEvents: 'none',
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
+                  <path d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.4 7 29.5 5 24 5 13 5 4 14 4 25s9 20 20 20 20-9 20-20c0-1.2-.1-2.3-.4-3.5z" fill="#FFC107"/>
+                  <path d="M6.3 15.2l6.6 4.8C14.6 16.5 19 14 24 14c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.4 8 29.5 6 24 6 16.3 6 9.6 9.7 6.3 15.2z" fill="#FF3D00"/>
+                  <path d="M24 44c5.4 0 10.2-1.9 13.9-5.1l-6.4-5.4C29.6 35.4 26.9 36 24 36c-5.2 0-9.6-3.3-11.3-8H6.1C9.3 37.6 16.1 44 24 44z" fill="#4CAF50"/>
+                  <path d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.4 5.4C41.9 35.6 44 30.7 44 25c0-1.2-.1-2.3-.4-3.5z" fill="#1976D2"/>
+                </svg>
+                Continue with Google
+              </div>
+              {/* Real Google GSI button — transparent overlay, intercepts the click */}
+              <div
+                id="google-btn-hidden-container"
+                style={{
+                  position: 'absolute', inset: 0,
+                  opacity: 0.01, overflow: 'hidden',
+                  borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                }}
+              />
+            </div>
 
             {/* Create Account */}
             <div
@@ -988,38 +983,38 @@ export default function MasterLockModal() {
               <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
             </div>
 
-            {/* Google Sign Up */}
-            <button
-              type="button"
-              disabled={loading}
-              onClick={handleGoogleSignIn}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                padding: '11px 16px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 'var(--radius-md)',
-                color: '#fff',
-                fontSize: '0.88rem',
-                cursor: 'pointer',
-                marginBottom: '14px',
-                transition: 'background 0.2s'
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-            >
-              <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.4 7 29.5 5 24 5 13 5 4 14 4 25s9 20 20 20 20-9 20-20c0-1.2-.1-2.3-.4-3.5z" fill="#FFC107"/>
-                <path d="M6.3 15.2l6.6 4.8C14.6 16.5 19 14 24 14c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.4 8 29.5 6 24 6 16.3 6 9.6 9.7 6.3 15.2z" fill="#FF3D00"/>
-                <path d="M24 44c5.4 0 10.2-1.9 13.9-5.1l-6.4-5.4C29.6 35.4 26.9 36 24 36c-5.2 0-9.6-3.3-11.3-8H6.1C9.3 37.6 16.1 44 24 44z" fill="#4CAF50"/>
-                <path d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.4 5.4C41.9 35.6 44 30.7 44 25c0-1.2-.1-2.3-.4-3.5z" fill="#1976D2"/>
-              </svg>
-              Sign up with Google
-            </button>
+            {/* Google Sign Up — same overlay pattern */}
+            <div style={{ position: 'relative', marginBottom: '14px', height: '42px' }}>
+              <div
+                style={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  gap: '10px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: 'var(--radius-md)',
+                  color: '#fff', fontSize: '0.88rem',
+                  pointerEvents: 'none',
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
+                  <path d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.4 7 29.5 5 24 5 13 5 4 14 4 25s9 20 20 20 20-9 20-20c0-1.2-.1-2.3-.4-3.5z" fill="#FFC107"/>
+                  <path d="M6.3 15.2l6.6 4.8C14.6 16.5 19 14 24 14c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.4 8 29.5 6 24 6 16.3 6 9.6 9.7 6.3 15.2z" fill="#FF3D00"/>
+                  <path d="M24 44c5.4 0 10.2-1.9 13.9-5.1l-6.4-5.4C29.6 35.4 26.9 36 24 36c-5.2 0-9.6-3.3-11.3-8H6.1C9.3 37.6 16.1 44 24 44z" fill="#4CAF50"/>
+                  <path d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.4 5.4C41.9 35.6 44 30.7 44 25c0-1.2-.1-2.3-.4-3.5z" fill="#1976D2"/>
+                </svg>
+                Sign up with Google
+              </div>
+              {/* Real Google GSI button overlay */}
+              <div
+                id="google-btn-hidden-container-signup"
+                style={{
+                  position: 'absolute', inset: 0,
+                  opacity: 0.01, overflow: 'hidden',
+                  borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                }}
+              />
+            </div>
 
             {/* Sign In */}
             <div
